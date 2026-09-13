@@ -3,8 +3,8 @@ Calibrate WebRTC VAD aggressiveness against the gold turns/*.json labels,
 so the segmentation used in production (own VAD) tracks the gold turns
 used to sanity-check training as closely as possible.
 
-Usage:
-    python calibrate_vad.py --manifest manifest.csv --audio-dir audio --turns-dir turns
+Usage (from the repo root):
+    python tools/calibrate_vad.py --manifest manifest.csv --audio-dir audio --turns-dir turns
 """
 
 import argparse

@@ -211,6 +211,40 @@
             word-break: break-word;
         }
 
+        /* Opción para activar el modelo de texto (ElevenLabs) */
+        .option-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            background: rgba(119, 225, 193, 0.04);
+        }
+
+        .option-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            accent-color: var(--primary);
+            flex-shrink: 0;
+        }
+
+        .option-row label {
+            font-size: 0.92rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .option-row small {
+            display: block;
+            margin-top: 4px;
+            color: var(--secondary-text);
+            font-weight: 400;
+            line-height: 1.4;
+        }
+
         button {
             width: 100%;
             padding: 15px 20px;
@@ -423,6 +457,19 @@
                     Ningún archivo seleccionado
                 </div>
 
+                <div class="option-row">
+                    <input type="checkbox" id="useTextModel">
+                    <label for="useTextModel">
+                        Usar transcripción semántica (ElevenLabs)
+                        <small>
+                            Suma análisis de texto (muletillas, diversidad
+                            léxica, ritmo del habla) al resultado. Agrega
+                            una llamada a la API por análisis: más lento y
+                            con costo por llamada.
+                        </small>
+                    </label>
+                </div>
+
                 <button id="analyzeButton" disabled>
                     Analizar llamada
                 </button>
@@ -475,6 +522,11 @@
                         </div>
 
                         <div class="detail-row">
+                            <span>Modelo</span>
+                            <strong id="modelUsed">—</strong>
+                        </div>
+
+                        <div class="detail-row">
                             <span>Estado</span>
                             <strong>Procesado</strong>
                         </div>
@@ -504,6 +556,8 @@
         const confidenceBar = document.getElementById("confidenceBar");
         const resultFile = document.getElementById("resultFile");
         const analysisTime = document.getElementById("analysisTime");
+        const modelUsed = document.getElementById("modelUsed");
+        const useTextModel = document.getElementById("useTextModel");
 
         const statusDot = document.getElementById("statusDot");
         const statusText = document.getElementById("statusText");
@@ -626,7 +680,8 @@
                     },
 
                     body: JSON.stringify({
-                        audio_base64: audioBase64
+                        audio_base64: audioBase64,
+                        use_text_model: useTextModel.checked
                     })
                 });
 
@@ -642,7 +697,12 @@
                 const endTime = performance.now();
                 const seconds = (endTime - startTime) / 1000;
 
-                showResult(data, currentFile.name, seconds);
+                showResult(
+                    data,
+                    currentFile.name,
+                    seconds,
+                    useTextModel.checked
+                );
             } catch (error) {
                 showError(error.message);
             } finally {
@@ -683,7 +743,7 @@
         /*
          * Muestra el resultado del backend.
          */
-        function showResult(data, fileName, seconds) {
+        function showResult(data, fileName, seconds, usedTextModel) {
             const probability = Number(data.confidence);
             const percentage = Math.round(probability * 100);
 
@@ -705,6 +765,9 @@
 
             resultFile.textContent = fileName;
             analysisTime.textContent = `${seconds.toFixed(2)} segundos`;
+            modelUsed.textContent = usedTextModel
+                ? "Con transcripción (ElevenLabs)"
+                : "Estándar (sin texto)";
         }
 
 

@@ -1,8 +1,8 @@
 """
 Verifica que exista un .wav en audio/ para cada anon_id del manifest.csv.
 
-Uso:
-    python check_audio.py
+Uso (desde la raíz del repo):
+    python tools/check_audio.py
 """
 
 import csv

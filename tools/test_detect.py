@@ -1,8 +1,8 @@
 """
 Prueba rápida de POST /detect sin depender de curl/base64 del sistema.
  
-Uso:
-    python test_detect.py audio/ALGUN_ID.wav
+Uso (desde la raíz del repo):
+    python tools/test_detect.py audio/ALGUN_ID.wav
 """
  
 import base64

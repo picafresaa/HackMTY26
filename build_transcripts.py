@@ -18,8 +18,11 @@ import os
 import time
 
 import soundfile as sf
+from dotenv import load_dotenv
 
 from transcribe import transcribe_channel
+
+load_dotenv()
 
 
 def main():

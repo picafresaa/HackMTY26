@@ -14,9 +14,14 @@ you'll actually ship -- that's what matches production. Use --segmentation
 gold only to get an oracle/upper-bound number for comparison, never ship
 that model.
 
-Usage:
-    python train.py --manifest manifest.csv --audio-dir audio \
-        --segmentation vad --out model.pkl
+SUPERSEDED: this trains against the older features.py acoustic pipeline
+(pitch_jitter, noise_floor, ...), which app.py no longer serves -- the
+production model now comes from dataset/scripts/final_model.py (acoustic_v2.py
+features). Kept here for reference only.
+
+Usage (from the repo root):
+    python tools/train.py --manifest manifest.csv --audio-dir audio \
+        --segmentation vad --out tools/model.pkl
 """
 
 import argparse
@@ -82,7 +87,7 @@ def main():
                      help="train on turn-taking features only, to check "
                           "how much the acoustic features are helping vs. "
                           "just overfitting to train-set voices")
-    ap.add_argument("--out", default="model.pkl")
+    ap.add_argument("--out", default="tools/model.pkl")
     ap.add_argument("--limit", type=int, default=None,
                      help="only process the first N train and N val rows -- "
                           "use this first to smoke-test before a full run")

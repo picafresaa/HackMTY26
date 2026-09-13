@@ -7,8 +7,8 @@ Segmentation sources for turn-taking features.
   This is the ONLY segmentation available in production, so features used
   by the served model must be computed from vad_segments(), not gold turns.
 
-Use calibrate_vad.py to pick the aggressiveness value that best matches
-the gold turns on the train split, then hardcode it here.
+Use tools/calibrate_vad.py to pick the aggressiveness value that best
+matches the gold turns on the train split, then hardcode it here.
 """
 
 import json
@@ -19,7 +19,7 @@ SAMPLE_RATE = 8000
 FRAME_MS = 30  # webrtcvad only supports 10/20/30 ms frames
 FRAME_LEN = int(SAMPLE_RATE * FRAME_MS / 1000)
 
-# Set this from calibrate_vad.py's output before training the production model.
+# Set this from tools/calibrate_vad.py's output before training the production model.
 DEFAULT_AGGRESSIVENESS = 3
 
 
