@@ -1,3 +1,25 @@
 .env
 node_modules/
 audio/
+
+# Documentacion e investigacion interna -- no se sube al repo del equipo.
+ARQUITECTURA.md
+CLAUDE.md
+.claude/
+
+# Carpeta de investigacion/entrenamiento propia -- se ignora entera
+# excepto los pocos archivos que el modelo final necesita para correr
+# (dataset/transcripts, dataset/turns, manifest.csv y los ~20 scripts de
+# experimentos se quedan solo en local, nunca se subieron ni hace falta).
+dataset/*
+!dataset/scripts/
+dataset/scripts/*
+!dataset/scripts/final_model.py
+!dataset/scripts/combined_final.py
+!dataset/scripts/ac_features.py
+!dataset/scripts/l2_common.py
+!dataset/scripts/final_model.pkl
+
+__pycache__/
+*.pyc
+.DS_Store
