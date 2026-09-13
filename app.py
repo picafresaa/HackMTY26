@@ -66,6 +66,9 @@ def detect(req: DetectRequest):
         is_synthetic=prob_synthetic >= 0.5,
         confidence=prob_synthetic,
     )
+from pathlib import Path
+from fastapi.responses import FileResponse
+
 @app.get("/")
 def home():
     frontend_file = Path(__file__).resolve().parent / "frontend" / "index.html"
