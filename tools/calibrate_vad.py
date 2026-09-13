@@ -9,10 +9,13 @@ Usage (from the repo root):
 
 import argparse
 import csv
+import os
+import sys
 
 import numpy as np
 import soundfile as sf
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from segmentation import vad_segments, load_gold_turns, FRAME_MS, SAMPLE_RATE
 
 
