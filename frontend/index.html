@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- Permite que se vea correctamente en celulares -->
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>NORA | Voice Deepfake Detector</title>
+
+    <style>
+        /* Colores principales de la página */
+        :root {
+            --background: #07111f;
+            --card: #101d2d;
+            --card-light: #17263a;
+            --primary: #77e1c1;
+            --primary-dark: #44b99b;
+            --text: #f4f8fb;
+            --secondary-text: #a9b8c7;
+            --danger: #ff6b7a;
+            --warning: #f7c66b;
+            --success: #77e1c1;
+        }
+
+        /* Hace que tamaños y espacios sean más fáciles de controlar */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family:
+                Inter,
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                sans-serif;
+
+            color: var(--text);
+            background:
+                radial-gradient(
+                    circle at top left,
+                    rgba(68, 185, 155, 0.16),
+                    transparent 35%
+                ),
+                var(--background);
+        }
+
+        /* Barra superior */
+        .navbar {
+            width: 100%;
+            padding: 22px 7%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.15rem;
+            font-weight: 700;
+        }
+
+        .brand-icon {
+            width: 38px;
+            height: 38px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            color: var(--background);
+            background: var(--primary);
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--secondary-text);
+            font-size: 0.9rem;
+        }
+
+        .status-dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: var(--warning);
+        }
+
+        .status-dot.online {
+            background: var(--success);
+            box-shadow: 0 0 12px var(--success);
+        }
+
+        .status-dot.offline {
+            background: var(--danger);
+        }
+
+        /* Contenido central */
+        main {
+            width: min(1100px, 90%);
+            margin: 0 auto;
+            padding: 70px 0;
+        }
+
+        .hero {
+            max-width: 760px;
+            margin-bottom: 45px;
+        }
+
+        .eyebrow {
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        h1 {
+            margin: 12px 0 16px;
+            font-size: clamp(2.4rem, 7vw, 4.5rem);
+            line-height: 1;
+        }
+
+        .hero p {
+            max-width: 650px;
+            color: var(--secondary-text);
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        /* Dos columnas */
+        .workspace {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            background: rgba(16, 29, 45, 0.9);
+            box-shadow: 0 22px 60px rgba(0, 0, 0, 0.25);
+        }
+
+        .card h2 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        .card-description {
+            margin-top: 0;
+            margin-bottom: 25px;
+            color: var(--secondary-text);
+            line-height: 1.5;
+        }
+
+        /* Cuadro para escoger el archivo */
+        .upload-area {
+            min-height: 220px;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border: 2px dashed rgba(119, 225, 193, 0.35);
+            border-radius: 18px;
+            cursor: pointer;
+            transition: 0.2s ease;
+            background: rgba(119, 225, 193, 0.04);
+        }
+
+        .upload-area:hover,
+        .upload-area.dragging {
+            border-color: var(--primary);
+            background: rgba(119, 225, 193, 0.09);
+            transform: translateY(-2px);
+        }
+
+        .upload-icon {
+            margin-bottom: 15px;
+            font-size: 2.5rem;
+        }
+
+        .upload-area strong {
+            font-size: 1.05rem;
+        }
+
+        .upload-area small {
+            margin-top: 8px;
+            color: var(--secondary-text);
+        }
+
+        #audioInput {
+            display: none;
+        }
+
+        .selected-file {
+            min-height: 24px;
+            margin: 18px 0;
+            color: var(--secondary-text);
+            word-break: break-word;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 13px;
+            color: #061710;
+            background: var(--primary);
+            font-size: 1rem;
+            font-weight: 750;
+            cursor: pointer;
+            transition: 0.2s ease;
+        }
+
+        button:hover:not(:disabled) {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        /* Resultado */
+        .result-empty {
+            height: 100%;
+            min-height: 350px;
+            display: grid;
+            place-items: center;
+            text-align: center;
+            color: var(--secondary-text);
+        }
+
+        .result-content {
+            display: none;
+        }
+
+        .verdict {
+            margin: 20px 0;
+            padding: 22px;
+            text-align: center;
+            border-radius: 16px;
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .verdict.human {
+            color: var(--success);
+            background: rgba(119, 225, 193, 0.1);
+            border: 1px solid rgba(119, 225, 193, 0.3);
+        }
+
+        .verdict.synthetic {
+            color: var(--danger);
+            background: rgba(255, 107, 122, 0.1);
+            border: 1px solid rgba(255, 107, 122, 0.3);
+        }
+
+        .confidence-label {
+            margin-bottom: 9px;
+            display: flex;
+            justify-content: space-between;
+            color: var(--secondary-text);
+        }
+
+        .confidence-track {
+            height: 12px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: var(--card-light);
+        }
+
+        .confidence-bar {
+            width: 0;
+            height: 100%;
+            border-radius: 999px;
+            background: var(--primary);
+            transition: width 0.6s ease;
+        }
+
+        .result-details {
+            margin-top: 25px;
+            padding: 18px;
+            border-radius: 14px;
+            background: var(--card-light);
+        }
+
+        .detail-row {
+            padding: 8px 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            color: var(--secondary-text);
+        }
+
+        .detail-row strong {
+            color: var(--text);
+        }
+
+        .error-message {
+            display: none;
+            margin-top: 16px;
+            padding: 14px;
+            border-radius: 12px;
+            color: #ffdce0;
+            background: rgba(255, 107, 122, 0.12);
+            border: 1px solid rgba(255, 107, 122, 0.3);
+        }
+
+        .loader {
+            display: none;
+            margin: 25px auto 0;
+            width: 34px;
+            height: 34px;
+            border: 4px solid rgba(255, 255, 255, 0.15);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            color: var(--secondary-text);
+            font-size: 0.85rem;
+        }
+
+        /* En pantallas pequeñas se convierte en una columna */
+        @media (max-width: 800px) {
+            main {
+                padding-top: 45px;
+            }
+
+            .workspace {
+                grid-template-columns: 1fr;
+            }
+
+            .navbar {
+                padding-inline: 5%;
+            }
+
+            .status-text {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="brand">
+            <div class="brand-icon">N</div>
+            <span>NORA Security</span>
+        </div>
+
+        <div class="status">
+            <span id="statusDot" class="status-dot"></span>
+            <span id="statusText" class="status-text">
+                Comprobando sistema...
+            </span>
+        </div>
+    </nav>
+
+    <main>
+        <section class="hero">
+            <span class="eyebrow">Voice fraud detection</span>
+
+            <h1>Detectamos lo que una voz intenta ocultar.</h1>
+
+            <p>
+                NORA analiza llamadas telefónicas para identificar posibles
+                voces sintéticas mediante señales acústicas y patrones
+                conversacionales.
+            </p>
+        </section>
+
+        <section class="workspace">
+            <!-- Tarjeta para seleccionar audio -->
+            <article class="card">
+                <h2>Analizar llamada</h2>
+
+                <p class="card-description">
+                    Selecciona una grabación WAV estéreo de 8 kHz.
+                    El canal 0 debe contener la voz del caller.
+                </p>
+
+                <label
+                    id="uploadArea"
+                    class="upload-area"
+                    for="audioInput"
+                >
+                    <span class="upload-icon">🎙️</span>
+                    <strong>Selecciona o arrastra un archivo</strong>
+                    <small>Formato aceptado: WAV</small>
+                </label>
+
+                <input
+                    id="audioInput"
+                    type="file"
+                    accept=".wav,audio/wav"
+                >
+
+                <div id="selectedFile" class="selected-file">
+                    Ningún archivo seleccionado
+                </div>
+
+                <button id="analyzeButton" disabled>
+                    Analizar llamada
+                </button>
+
+                <div id="loader" class="loader"></div>
+
+                <div id="errorMessage" class="error-message"></div>
+            </article>
+
+            <!-- Tarjeta donde aparece el resultado -->
+            <article class="card">
+                <div id="emptyResult" class="result-empty">
+                    <div>
+                        <div style="font-size: 3rem;">🛡️</div>
+                        <h2>Esperando una llamada</h2>
+                        <p>
+                            El resultado del análisis aparecerá aquí.
+                        </p>
+                    </div>
+                </div>
+
+                <div id="resultContent" class="result-content">
+                    <span class="eyebrow">Resultado del análisis</span>
+
+                    <div id="verdict" class="verdict">
+                        Resultado
+                    </div>
+
+                    <div class="confidence-label">
+                        <span>Probabilidad de voz sintética</span>
+                        <strong id="confidenceText">0%</strong>
+                    </div>
+
+                    <div class="confidence-track">
+                        <div
+                            id="confidenceBar"
+                            class="confidence-bar"
+                        ></div>
+                    </div>
+
+                    <div class="result-details">
+                        <div class="detail-row">
+                            <span>Archivo</span>
+                            <strong id="resultFile">—</strong>
+                        </div>
+
+                        <div class="detail-row">
+                            <span>Tiempo de análisis</span>
+                            <strong id="analysisTime">—</strong>
+                        </div>
+
+                        <div class="detail-row">
+                            <span>Estado</span>
+                            <strong>Procesado</strong>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </section>
+
+        <footer>
+            NORA prototype · HackMTY26 · Altur Challenge
+        </footer>
+    </main>
+
+    <script>
+        // Guardamos referencias a elementos de la pantalla.
+        const audioInput = document.getElementById("audioInput");
+        const analyzeButton = document.getElementById("analyzeButton");
+        const selectedFile = document.getElementById("selectedFile");
+        const uploadArea = document.getElementById("uploadArea");
+        const loader = document.getElementById("loader");
+        const errorMessage = document.getElementById("errorMessage");
+
+        const emptyResult = document.getElementById("emptyResult");
+        const resultContent = document.getElementById("resultContent");
+        const verdict = document.getElementById("verdict");
+        const confidenceText = document.getElementById("confidenceText");
+        const confidenceBar = document.getElementById("confidenceBar");
+        const resultFile = document.getElementById("resultFile");
+        const analysisTime = document.getElementById("analysisTime");
+
+        const statusDot = document.getElementById("statusDot");
+        const statusText = document.getElementById("statusText");
+
+        // Aquí guardaremos el archivo seleccionado.
+        let currentFile = null;
+
+
+        /*
+         * Comprueba si FastAPI está encendido.
+         */
+        async function checkServerStatus() {
+            try {
+                const response = await fetch("/health");
+
+                if (!response.ok) {
+                    throw new Error("Servidor no disponible");
+                }
+
+                statusDot.className = "status-dot online";
+                statusText.textContent = "Sistema disponible";
+            } catch (error) {
+                statusDot.className = "status-dot offline";
+                statusText.textContent = "Sistema desconectado";
+            }
+        }
+
+
+        /*
+         * Se ejecuta cuando la persona selecciona un archivo.
+         */
+        audioInput.addEventListener("change", function () {
+            const file = audioInput.files[0];
+
+            if (!file) {
+                currentFile = null;
+                selectedFile.textContent = "Ningún archivo seleccionado";
+                analyzeButton.disabled = true;
+                return;
+            }
+
+            // Verificamos la extensión.
+            if (!file.name.toLowerCase().endsWith(".wav")) {
+                showError("Selecciona un archivo con extensión .wav.");
+
+                currentFile = null;
+                audioInput.value = "";
+                selectedFile.textContent = "Archivo no válido";
+                analyzeButton.disabled = true;
+                return;
+            }
+
+            currentFile = file;
+            selectedFile.textContent =
+                `${file.name} · ${formatFileSize(file.size)}`;
+
+            analyzeButton.disabled = false;
+            hideError();
+        });
+
+
+        /*
+         * Permite arrastrar un WAV al cuadro.
+         */
+        uploadArea.addEventListener("dragover", function (event) {
+            event.preventDefault();
+            uploadArea.classList.add("dragging");
+        });
+
+
+        uploadArea.addEventListener("dragleave", function () {
+            uploadArea.classList.remove("dragging");
+        });
+
+
+        uploadArea.addEventListener("drop", function (event) {
+            event.preventDefault();
+            uploadArea.classList.remove("dragging");
+
+            const file = event.dataTransfer.files[0];
+
+            if (!file || !file.name.toLowerCase().endsWith(".wav")) {
+                showError("El archivo arrastrado debe ser WAV.");
+                return;
+            }
+
+            currentFile = file;
+            selectedFile.textContent =
+                `${file.name} · ${formatFileSize(file.size)}`;
+
+            analyzeButton.disabled = false;
+            hideError();
+        });
+
+
+        /*
+         * Se ejecuta cuando presionamos "Analizar llamada".
+         */
+        analyzeButton.addEventListener("click", async function () {
+            if (!currentFile) {
+                showError("Primero selecciona un archivo WAV.");
+                return;
+            }
+
+            setLoading(true);
+            hideError();
+
+            const startTime = performance.now();
+
+            try {
+                // Convertimos el archivo a base64.
+                const audioBase64 = await fileToBase64(currentFile);
+
+                // Lo enviamos al endpoint obligatorio.
+                const response = await fetch("/detect", {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+
+                    body: JSON.stringify({
+                        audio_base64: audioBase64
+                    })
+                });
+
+                // Intentamos leer la respuesta JSON.
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.detail || "No se pudo analizar el audio."
+                    );
+                }
+
+                const endTime = performance.now();
+                const seconds = (endTime - startTime) / 1000;
+
+                showResult(data, currentFile.name, seconds);
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        });
+
+
+        /*
+         * Convierte un archivo en texto base64.
+         */
+        function fileToBase64(file) {
+            return new Promise(function (resolve, reject) {
+                const reader = new FileReader();
+
+                reader.onload = function () {
+                    // El navegador genera:
+                    // data:audio/wav;base64,AAAA...
+                    //
+                    // Obtenemos solamente lo que está después de la coma.
+                    const result = reader.result;
+                    const base64 = result.split(",", 2)[1];
+
+                    resolve(base64);
+                };
+
+                reader.onerror = function () {
+                    reject(
+                        new Error("No pude leer el archivo seleccionado.")
+                    );
+                };
+
+                reader.readAsDataURL(file);
+            });
+        }
+
+
+        /*
+         * Muestra el resultado del backend.
+         */
+        function showResult(data, fileName, seconds) {
+            const probability = Number(data.confidence);
+            const percentage = Math.round(probability * 100);
+
+            emptyResult.style.display = "none";
+            resultContent.style.display = "block";
+
+            if (data.is_synthetic) {
+                verdict.textContent = "⚠️ Posible voz sintética";
+                verdict.className = "verdict synthetic";
+                confidenceBar.style.background = "var(--danger)";
+            } else {
+                verdict.textContent = "✓ Voz probablemente humana";
+                verdict.className = "verdict human";
+                confidenceBar.style.background = "var(--success)";
+            }
+
+            confidenceText.textContent = `${percentage}%`;
+            confidenceBar.style.width = `${percentage}%`;
+
+            resultFile.textContent = fileName;
+            analysisTime.textContent = `${seconds.toFixed(2)} segundos`;
+        }
+
+
+        /*
+         * Enciende o apaga la animación de carga.
+         */
+        function setLoading(isLoading) {
+            loader.style.display = isLoading ? "block" : "none";
+            analyzeButton.disabled = isLoading;
+
+            analyzeButton.textContent = isLoading
+                ? "Analizando..."
+                : "Analizar llamada";
+        }
+
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = "block";
+        }
+
+
+        function hideError() {
+            errorMessage.style.display = "none";
+        }
+
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) {
+                return `${bytes} bytes`;
+            }
+
+            if (bytes < 1024 * 1024) {
+                return `${(bytes / 1024).toFixed(1)} KB`;
+            }
+
+            return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+        }
+
+
+        // Comprobamos el servidor cuando se abre la página.
+        checkServerStatus();
+
+        // Volvemos a comprobarlo cada 15 segundos.
+        setInterval(checkServerStatus, 15000);
+    </script>
+</body>
+</html>
